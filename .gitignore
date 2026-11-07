@@ -1,0 +1,23 @@
+# Environment & Virtualenv
+venv/
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.env
+
+# Testing & Cache
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs & Data
+*.log
+data/
+memgraph_data/
+temp_repos/
+
+# IDE
+.vscode/
+.idea/

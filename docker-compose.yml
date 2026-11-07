@@ -1,0 +1,61 @@
+services:
+  memgraph:
+    image: memgraph/memgraph-platform:latest
+    container_name: agent_memgraph
+    ports:
+      - "7687:7687" # Memgraph Bolt Port
+      - "3000:3000" # Memgraph Lab Web Interface
+    environment:
+      - MEMGRAPH_CONFIG=--log-level=WARNING
+    volumes:
+      - memgraph_data:/var/lib/memgraph
+    networks:
+      - agent_network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "echo 'RETURN 1;' | mgconsole || exit 0"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: agent_backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - MEMGRAPH_HOST=memgraph
+      - MEMGRAPH_PORT=7687
+    depends_on:
+      - memgraph
+    volumes:
+      - ./temp_repos:/app/temp_repos
+    networks:
+      - agent_network
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: agent_frontend
+    ports:
+      - "8501:8501"
+    environment:
+      - BACKEND_URL=http://backend:8000
+    depends_on:
+      - backend
+    networks:
+      - agent_network
+    restart: unless-stopped
+
+volumes:
+  memgraph_data:
+
+networks:
+  agent_network:
+    driver: bridge
